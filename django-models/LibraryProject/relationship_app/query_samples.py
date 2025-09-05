@@ -5,7 +5,8 @@ def books_by_author(author_name):
     Usage: books = books_by_author('George Orwell')
     """
     from .models import Book, Author
-    return Book.objects.filter(author__name=author_name)
+    author = Author.objects.get(name=author_name)
+    return Book.objects.filter(author=author)
 
 # List all books in a library
 def books_in_library(library_name):
