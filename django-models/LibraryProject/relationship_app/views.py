@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from django.views.generic import DetailView
+from django.views.generic.detail import DetailView  # Use this specific import
 from .models import Book
-from .models import Library  # This line must be present
+from .models import Library
 
 # Function-based view to list all books
 def list_books(request):
@@ -13,3 +13,4 @@ class LibraryDetailView(DetailView):
     model = Library
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
+
