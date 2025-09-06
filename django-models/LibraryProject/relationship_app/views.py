@@ -15,8 +15,8 @@ class LibraryDetailView(DetailView):
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
-# Authentication view for registration only
-def register_view(request):
+# Authentication view for registration - renamed to 'register'
+def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
