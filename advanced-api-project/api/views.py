@@ -7,21 +7,46 @@ and mixins to handle CRUD operations for Book and Author models.
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer, AuthorDetailSerializer
+from .filters import BookFilter
 
 # Book Views using Generic API Views
 class BookListView(generics.ListAPIView):
     """
-    ListView for retrieving all books.
+    ListView for retrieving all books with filtering, searching, and ordering.
     
     Provides a read-only endpoint that returns all Book instances.
-    Uses BookSerializer to format the response data.
+    Includes comprehensive filtering, search, and ordering capabilities.
+    
+    Filtering Examples:
+    - /api/books/?title=harry                    (books with 'harry' in title)
+    - /api/books/?author__name=tolkien           (books by author with 'tolkien' in name)
+    - /api/books/?publication_year=2020          (books published in 2020)
+    - /api/books/?publication_year__gte=2020     (books published 2020 or later)
+    - /api/books/?publication_year__lte=2020     (books published 2020 or earlier)
+    
+    Search Examples:
+    - /api/books/?search=harry                   (search in title and author name)
+    
+    Ordering Examples:
+    - /api/books/?ordering=title                 (ascending by title)
+    - /api/books/?ordering=-title                (descending by title)
+    - /api/books/?ordering=publication_year      (ascending by year)
+    - /api/books/?ordering=-publication_year     (descending by year)
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [AllowAny]  # Allow anyone to view books
-
+    permission_classes = [AllowAny]
+    
+    # Filtering, searching, and ordering configuration
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = BookFilter
+    search_fields = ['title', 'author__name']
+    ordering_fields = ['title', 'publication_year', 'author__name']
+    ordering = ['title']  # Default ordering
 
 class BookDetailView(generics.RetrieveAPIView):
     """
@@ -97,10 +122,14 @@ class AuthorListCreateView(generics.ListCreateAPIView):
     Combined List and Create view for Author model.
     
     Handles GET requests to list all authors and POST requests to create new authors.
-    Applies different permission levels for read vs write operations.
+    Includes basic search functionality for author names.
     """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name']
+    ordering = ['name']
     
     def get_permissions(self):
         """
@@ -108,9 +137,8 @@ class AuthorListCreateView(generics.ListCreateAPIView):
         based on the HTTP method (GET vs POST).
         """
         if self.request.method == 'GET':
-            return [permissions.AllowAny()]  # Anyone can view authors
+            return [AllowAny()]  # Anyone can view authors
         return [IsAuthenticated()]  # Only authenticated users can create authors
-
 
 class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
     """

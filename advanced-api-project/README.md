@@ -37,3 +37,24 @@ curl http://127.0.0.1:8000/api/books/
 curl -X POST http://127.0.0.1:8000/api/books/create/ \
   -H "Content-Type: application/json" \
   -d '{"title":"New Book", "publication_year": 2023, "author": 1}'
+
+## Filtering, Searching, and Ordering
+
+This API implements comprehensive filtering, searching, and ordering capabilities for the Book model.
+
+### Filtering
+
+Filter books using query parameters:
+
+```bash
+# Filter by title (case-insensitive contains)
+curl "http://127.0.0.1:8000/api/books/?title=harry"
+
+# Filter by author name (case-insensitive contains)
+curl "http://127.0.0.1:8000/api/books/?author__name=tolkien"
+
+# Filter by exact publication year
+curl "http://127.0.0.1:8000/api/books/?publication_year=1997"
+
+# Filter by publication year range
+curl "http://127.0.0.1:8000/api/books/?publication_year__gte=1990&publication_year__lte=2000"
