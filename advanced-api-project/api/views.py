@@ -8,7 +8,6 @@ and mixins to handle CRUD operations for Book and Author models.
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from django_filters import rest_framework as filters
-from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer, AuthorDetailSerializer
 from .filters import BookFilter
@@ -42,7 +41,7 @@ class BookListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     
     # Filtering, searching, and ordering configuration
-    filter_backends = [filters.DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_backends = [filters.DjangoFilterBackend, filters.SearchFilter, filters,OrderingFilter]
     filterset_class = BookFilter
     search_fields = ['title', 'author__name']
     ordering_fields = ['title', 'publication_year', 'author__name']
@@ -126,7 +125,7 @@ class AuthorListCreateView(generics.ListCreateAPIView):
     """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
-    filter_backends = [SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name']
     ordering_fields = ['name']
     ordering = ['name']
