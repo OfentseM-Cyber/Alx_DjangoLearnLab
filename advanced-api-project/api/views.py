@@ -5,10 +5,10 @@ This module implements Django REST Framework's generic views
 and mixins to handle CRUD operations for Book and Author models.
 """
 
-from rest_framework import generics, permissions
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer, AuthorDetailSerializer
-
 
 # Book Views using Generic API Views
 class BookListView(generics.ListAPIView):
@@ -20,7 +20,7 @@ class BookListView(generics.ListAPIView):
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]  # Allow anyone to view books
+    permission_classes = [AllowAny]  # Allow anyone to view books
 
 
 class BookDetailView(generics.RetrieveAPIView):
@@ -32,7 +32,7 @@ class BookDetailView(generics.RetrieveAPIView):
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]  # Allow anyone to view book details
+    permission_classes = [AllowAny]  # Allow anyone to view book details
 
 
 class BookCreateView(generics.CreateAPIView):
@@ -44,7 +44,7 @@ class BookCreateView(generics.CreateAPIView):
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can create books
+    permission_classes = [IsAuthenticated]  # Only authenticated users can create books
 
     def perform_create(self, serializer):
         """
@@ -63,7 +63,7 @@ class BookUpdateView(generics.UpdateAPIView):
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can update books
+    permission_classes = [IsAuthenticated]  # Only authenticated users can update books
 
     def perform_update(self, serializer):
         """
@@ -81,7 +81,7 @@ class BookDeleteView(generics.DestroyAPIView):
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.IsAuthenticated]  # Only authenticated users can delete books
+    permission_classes = [IsAuthenticated]  # Only authenticated users can delete books
 
     def perform_destroy(self, instance):
         """
@@ -109,7 +109,7 @@ class AuthorListCreateView(generics.ListCreateAPIView):
         """
         if self.request.method == 'GET':
             return [permissions.AllowAny()]  # Anyone can view authors
-        return [permissions.IsAuthenticated()]  # Only authenticated users can create authors
+        return [IsAuthenticated()]  # Only authenticated users can create authors
 
 
 class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -128,5 +128,5 @@ class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
         based on the HTTP method.
         """
         if self.request.method == 'GET':
-            return [permissions.AllowAny()]  # Anyone can view author details
-        return [permissions.IsAuthenticated()]  # Only authenticated users can modify authors
+            return [AllowAny()]  # Anyone can view author details
+        return [IsAuthenticated()]  # Only authenticated users can modify authors
