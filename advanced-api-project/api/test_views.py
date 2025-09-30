@@ -38,6 +38,8 @@ class BookAPITestCase(TestCase):
         self.client.login(username='testuser', password='testpassword123')
         response = self.client.get('/api/books/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 2)
     
     def test_create_book_authenticated(self):
         self.client.login(username='testuser', password='testpassword123')
@@ -48,6 +50,8 @@ class BookAPITestCase(TestCase):
         }
         response = self.client.post('/api/books/create/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['title'], 'New Test Book')
+        self.assertEqual(response.data['publication_year'], 2023)
     
     def test_update_book_authenticated(self):
         self.client.login(username='testuser', password='testpassword123')
@@ -62,26 +66,65 @@ class BookAPITestCase(TestCase):
             format='json'
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'Updated Book Title')
+        self.assertEqual(response.data['publication_year'], 2024)
     
     def test_delete_book_authenticated(self):
         self.client.login(username='testuser', password='testpassword123')
         response = self.client.delete(f'/api/books/delete/{self.book1.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # For DELETE, response.data might be None, so we check the status
+    
+    def test_get_book_detail(self):
+        response = self.client.get(f'/api/books/{self.book1.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.book1.title)
+        self.assertEqual(response.data['publication_year'], self.book1.publication_year)
     
     def test_filter_books_by_title(self):
         self.client.login(username='testuser', password='testpassword123')
         response = self.client.get('/api/books/?title=harry')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertTrue(len(response.data) > 0)
+        # Check that all returned books contain 'harry' in title
+        for book in response.data:
+            self.assertIn('harry', book['title'].lower())
     
     def test_search_books(self):
         self.client.login(username='testuser', password='testpassword123')
         response = self.client.get('/api/books/?search=potter')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertTrue(len(response.data) > 0)
     
     def test_order_books_by_title(self):
         self.client.login(username='testuser', password='testpassword123')
         response = self.client.get('/api/books/?ordering=title')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        # Check if titles are in ascending order
+        titles = [book['title'] for book in response.data]
+        self.assertEqual(titles, sorted(titles))
+    
+    def test_order_books_by_publication_year(self):
+        self.client.login(username='testuser', password='testpassword123')
+        response = self.client.get('/api/books/?ordering=publication_year')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        # Check if years are in ascending order
+        years = [book['publication_year'] for book in response.data]
+        self.assertEqual(years, sorted(years))
+    
+    def test_create_book_unauthenticated(self):
+        data = {
+            'title': 'New Test Book',
+            'publication_year': 2023,
+            'author': self.author1.id
+        }
+        response = self.client.post('/api/books/create/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('detail', response.data)
 
 
 class AuthorAPITestCase(TestCase):
@@ -99,6 +142,26 @@ class AuthorAPITestCase(TestCase):
         data = {'name': 'New Test Author'}
         response = self.client.post('/api/authors/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], 'New Test Author')
+    
+    def test_list_authors(self):
+        response = self.client.get('/api/authors/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'Test Author')
+    
+    def test_get_author_detail(self):
+        response = self.client.get(f'/api/authors/{self.author.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'Test Author')
+    
+    def test_search_authors(self):
+        response = self.client.get('/api/authors/?search=test')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'Test Author')
 
 
 class ValidationTestCase(TestCase):
@@ -122,11 +185,13 @@ class ValidationTestCase(TestCase):
         }
         response = self.client.post('/api/books/create/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('publication_year', response.data)
     
     def test_multiple_login_attempts(self):
         self.client.login(username='testuser', password='testpassword123')
         response = self.client.get('/api/books/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
         
         self.client.logout()
         
@@ -134,3 +199,15 @@ class ValidationTestCase(TestCase):
         data = {'name': 'Another Author'}
         response = self.client.post('/api/authors/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['name'], 'Another Author')
+    
+    def test_response_data_structure(self):
+        self.client.login(username='testuser', password='testpassword123')
+        response = self.client.get('/api/books/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Check that response.data has expected structure
+        for book in response.data:
+            self.assertIn('id', book)
+            self.assertIn('title', book)
+            self.assertIn('publication_year', book)
+            self.assertIn('author', book)
