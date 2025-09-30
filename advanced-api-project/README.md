@@ -58,3 +58,22 @@ curl "http://127.0.0.1:8000/api/books/?publication_year=1997"
 
 # Filter by publication year range
 curl "http://127.0.0.1:8000/api/books/?publication_year__gte=1990&publication_year__lte=2000"
+
+## Unit Testing
+
+This project includes comprehensive unit tests for all API endpoints.
+
+### Running Tests
+
+```bash
+# Run all tests for the api app
+python manage.py test api
+
+# Run tests with verbose output
+python manage.py test api -v 2
+
+# Run specific test case
+python manage.py test api.tests_views.BookAPITestCase
+
+# Run specific test method
+python manage.py test api.tests_views.BookAPITestCase.test_list_books_authenticated
