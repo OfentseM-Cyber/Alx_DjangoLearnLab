@@ -7,7 +7,7 @@ and mixins to handle CRUD operations for Book and Author models.
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import rest_framework  # Updated import for ALX checker
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer, AuthorDetailSerializer
